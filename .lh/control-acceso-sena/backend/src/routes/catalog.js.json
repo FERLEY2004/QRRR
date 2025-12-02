@@ -1,0 +1,18 @@
+{
+    "sourceFile": "control-acceso-sena/backend/src/routes/catalog.js",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1764319581659,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1764319581659,
+            "name": "Commit-0",
+            "content": "// Catalog Routes - Rutas de catálogo\nimport express from 'express';\nimport {\n  getAllPrograms,\n  getProgramByCode,\n  createProgram,\n  getAllFichas,\n  getFichaByCode,\n  createFicha,\n  getStudentsByFicha,\n  getAllAmbientes,\n  getAmbienteByCode,\n  getAmbientesByType,\n  getStudentsByProgram,\n  getAmbientOccupation,\n  getAccessByProgram,\n  getAccessByFicha\n} from '../controllers/catalogController.js';\nimport { authenticate, requireRole } from '../middleware/auth.js';\n\nconst router = express.Router();\n\n// Todas las rutas requieren autenticación\nrouter.use(authenticate);\n\n// Programas de formación\n// GET /api/catalog/programs - Lista todos los programas\nrouter.get('/programs', getAllPrograms);\n\n// GET /api/catalog/programs/:codigo - Programa específico\nrouter.get('/programs/:codigo', getProgramByCode);\n\n// POST /api/catalog/programs - Crear programa manualmente\nrouter.post('/programs', requireRole('admin', 'ADMINISTRADOR', 'guarda', 'GUARDA'), createProgram);\n\n// Fichas\n// GET /api/catalog/fichas - Lista todas las fichas\nrouter.get('/fichas', getAllFichas);\n\n// GET /api/catalog/fichas/:codigo - Ficha específica\nrouter.get('/fichas/:codigo', getFichaByCode);\n\n// POST /api/catalog/fichas - Crear ficha\nrouter.post('/fichas', requireRole('admin', 'ADMINISTRADOR', 'guarda', 'GUARDA'), createFicha);\n\n// GET /api/catalog/fichas/:codigo/students - Aprendices por ficha\nrouter.get('/fichas/:codigo/students', getStudentsByFicha);\n\n// GET /api/catalog/fichas/:codigo/access - Accesos por ficha\nrouter.get('/fichas/:codigo/access', getAccessByFicha);\n\n// Ambientes\n// GET /api/catalog/ambientes - Lista todos los ambientes\nrouter.get('/ambientes', getAllAmbientes);\n\n// GET /api/catalog/ambientes/:codigo - Ambiente específico\nrouter.get('/ambientes/:codigo', getAmbienteByCode);\n\n// GET /api/catalog/ambientes/tipo/:tipo - Ambientes por tipo\nrouter.get('/ambientes/tipo/:tipo', getAmbientesByType);\n\n// Consultas enriquecidas\n// GET /api/catalog/programs/:codigo/students - Aprendices por programa\nrouter.get('/programs/:codigo/students', getStudentsByProgram);\n\n// GET /api/catalog/programs/:codigo/access - Accesos por programa\nrouter.get('/programs/:codigo/access', getAccessByProgram);\n\n// GET /api/catalog/ambientes/:codigo/occupation - Ocupación por ambiente\nrouter.get('/ambientes/:codigo/occupation', getAmbientOccupation);\n\nexport default router;\n\n\n\n\n"
+        }
+    ]
+}

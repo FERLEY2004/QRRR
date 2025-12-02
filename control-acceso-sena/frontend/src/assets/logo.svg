@@ -1,0 +1,19 @@
+<svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0066cc"/>
+      <stop offset="100%" stop-color="#00a8ff"/>
+    </linearGradient>
+  </defs>
+  <circle cx="60" cy="60" r="55" fill="url(#logoGradient)" stroke="#004182" stroke-width="2"/>
+  <text x="60" y="72" text-anchor="middle" font-family="Arial, sans-serif" font-size="32" fill="#fff" font-weight="700">
+    Control
+  </text>
+  <text x="60" y="92" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#fff" letter-spacing="0.2">
+    SENA
+  </text>
+</svg>
+
+
+
+

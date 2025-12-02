@@ -1,0 +1,18 @@
+{
+    "sourceFile": "control-acceso-sena/backend/src/utils/columnResolver.js",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1764233003134,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1764233003134,
+            "name": "Commit-0",
+            "content": "import pool from '../utils/dbPool.js';\r\n\r\nlet registrosIdFieldCache = null;\r\n\r\n/**\r\n * Devuelve dinámicamente el nombre de columna que almacena el identificador\r\n * del registro de ingreso/salida. Puede llamarse `id_registro` o\r\n * `id_registro_entrada_salida` según la base de datos.\r\n */\r\nexport async function getRegistroIdField() {\r\n  if (registrosIdFieldCache) {\r\n    return registrosIdFieldCache;\r\n  }\r\n\r\n  const [rows] = await pool.execute(\r\n    `SELECT COLUMN_NAME\r\n     FROM information_schema.COLUMNS\r\n     WHERE TABLE_SCHEMA = DATABASE()\r\n       AND TABLE_NAME = 'registros_entrada_salida'\r\n       AND COLUMN_NAME IN ('id_registro', 'id_registro_entrada_salida')`\r\n  );\r\n\r\n  const columns = rows.map((row) => row.COLUMN_NAME);\r\n  if (columns.includes('id_registro_entrada_salida')) {\r\n    registrosIdFieldCache = 'id_registro_entrada_salida';\r\n  } else if (columns.includes('id_registro')) {\r\n    registrosIdFieldCache = 'id_registro';\r\n  } else {\r\n    registrosIdFieldCache = 'id_registro_entrada_salida';\r\n  }\r\n\r\n  return registrosIdFieldCache;\r\n}\r\n\r\n"
+        }
+    ]
+}

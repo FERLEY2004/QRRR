@@ -1,0 +1,18 @@
+{
+    "sourceFile": "control-acceso-sena/backend/src/utils/insertUsers.sql",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1763533659531,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1763533659531,
+            "name": "Commit-0",
+            "content": "-- =====================================================\r\n-- Script para insertar usuarios de inicio de sesión\r\n-- Sistema de Control de Acceso SENA\r\n-- =====================================================\r\n\r\nUSE control_acceso_sena;\r\n\r\n-- =====================================================\r\n-- IMPORTANTE: Las contraseñas deben estar hasheadas con bcrypt\r\n-- Este script contiene los hashes pre-generados para las contraseñas por defecto\r\n-- =====================================================\r\n\r\n-- Insertar usuario Administrador\r\n-- Email: admin@sena.edu.co\r\n-- Contraseña: admin123\r\n-- Hash bcrypt: $2a$10$rOzJqZqZqZqZqZqZqZqZqOZqZqZqZqZqZqZqZqZqZqZqZqZqZqZq\r\nINSERT INTO Usuarios (nombre, email, password_hash, rol, estado) \r\nVALUES (\r\n    'Administrador',\r\n    'admin@sena.edu.co',\r\n    '$2a$10$rOzJqZqZqZqZqZqZqZqZqOZqZqZqZqZqZqZqZqZqZqZqZqZqZqZq',\r\n    'admin',\r\n    'activo'\r\n)\r\nON DUPLICATE KEY UPDATE \r\n    nombre = VALUES(nombre),\r\n    password_hash = VALUES(password_hash),\r\n    rol = VALUES(rol),\r\n    estado = VALUES(estado);\r\n\r\n-- Insertar usuario Guarda de Seguridad\r\n-- Email: guarda@sena.edu.co\r\n-- Contraseña: guarda123\r\n-- Hash bcrypt: $2a$10$rOzJqZqZqZqZqZqZqZqZqOZqZqZqZqZqZqZqZqZqZqZqZqZqZqZq\r\nINSERT INTO Usuarios (nombre, email, password_hash, rol, estado) \r\nVALUES (\r\n    'Guarda de Seguridad',\r\n    'guarda@sena.edu.co',\r\n    '$2a$10$rOzJqZqZqZqZqZqZqZqZqOZqZqZqZqZqZqZqZqZqZqZqZqZqZqZq',\r\n    'guarda',\r\n    'activo'\r\n)\r\nON DUPLICATE KEY UPDATE \r\n    nombre = VALUES(nombre),\r\n    password_hash = VALUES(password_hash),\r\n    rol = VALUES(rol),\r\n    estado = VALUES(estado);\r\n\r\n-- =====================================================\r\n-- NOTA: Los hashes anteriores son ejemplos. \r\n-- Para generar hashes reales, usa el script insertUsers.js\r\n-- =====================================================\r\n\r\n"
+        }
+    ]
+}

@@ -1,0 +1,18 @@
+{
+    "sourceFile": "control-acceso-sena/backend/src/utils/insertUsers.js",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1763535918849,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1763535918849,
+            "name": "Commit-0",
+            "content": "// Script para insertar usuarios de inicio de sesión\r\n// Genera los hashes bcrypt correctamente y los inserta en la base de datos\r\n\r\nimport dotenv from 'dotenv';\r\nimport bcrypt from 'bcryptjs';\r\nimport pool from './dbPool.js';\r\n\r\ndotenv.config();\r\n\r\nconst insertUsers = async () => {\r\n  try {\r\n    console.log('🔐 Insertando usuarios de inicio de sesión...\\n');\r\n\r\n    // Usuarios a crear\r\n    const users = [\r\n      {\r\n        nombre: 'Administrador',\r\n        email: 'admin@sena.edu.co',\r\n        password: 'admin123',\r\n        rol: 'admin',\r\n        estado: 'activo'\r\n      },\r\n      {\r\n        nombre: 'Guarda de Seguridad',\r\n        email: 'guarda@sena.edu.co',\r\n        password: 'guarda123',\r\n        rol: 'guarda',\r\n        estado: 'activo'\r\n      }\r\n    ];\r\n\r\n    for (const userData of users) {\r\n      try {\r\n        // Generar hash de la contraseña\r\n        const passwordHash = await bcrypt.hash(userData.password, 10);\r\n        \r\n        // Verificar si el usuario ya existe\r\n        const [existing] = await pool.execute(\r\n          'SELECT id_usuario FROM Usuarios WHERE email = ?',\r\n          [userData.email]\r\n        );\r\n\r\n        if (existing.length > 0) {\r\n          // Actualizar usuario existente\r\n          await pool.execute(\r\n            `UPDATE Usuarios \r\n             SET nombre = ?, password_hash = ?, rol = ?, estado = ?\r\n             WHERE email = ?`,\r\n            [userData.nombre, passwordHash, userData.rol, userData.estado, userData.email]\r\n          );\r\n          console.log(`✅ Usuario actualizado: ${userData.email} (${userData.rol})`);\r\n        } else {\r\n          // Insertar nuevo usuario\r\n          await pool.execute(\r\n            `INSERT INTO Usuarios (nombre, email, password_hash, rol, estado) \r\n             VALUES (?, ?, ?, ?, ?)`,\r\n            [userData.nombre, userData.email, passwordHash, userData.rol, userData.estado]\r\n          );\r\n          console.log(`✅ Usuario creado: ${userData.email} (${userData.rol})`);\r\n        }\r\n\r\n        console.log(`   📧 Email: ${userData.email}`);\r\n        console.log(`   🔑 Contraseña: ${userData.password}`);\r\n        console.log(`   👤 Rol: ${userData.rol}\\n`);\r\n      } catch (error) {\r\n        console.error(`❌ Error al procesar usuario ${userData.email}:`, error.message);\r\n      }\r\n    }\r\n\r\n    // Listar todos los usuarios\r\n    console.log('📋 Usuarios en la base de datos:');\r\n    const [allUsers] = await pool.execute(\r\n      'SELECT id_usuario, nombre, email, rol, estado FROM Usuarios ORDER BY id_usuario'\r\n    );\r\n    \r\n    allUsers.forEach(user => {\r\n      console.log(`   - ${user.email} (${user.rol}) - Estado: ${user.estado}`);\r\n    });\r\n\r\n    console.log('\\n✅ Proceso completado exitosamente');\r\n  } catch (error) {\r\n    console.error('❌ Error:', error.message);\r\n    console.error('Stack:', error.stack);\r\n  } finally {\r\n    await pool.end();\r\n    process.exit(0);\r\n  }\r\n};\r\n\r\n// Ejecutar el script\r\ninsertUsers();\r\n\r\nexport default insertUsers;\r\n\r\n"
+        }
+    ]
+}

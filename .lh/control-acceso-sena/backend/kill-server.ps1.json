@@ -1,0 +1,18 @@
+{
+    "sourceFile": "control-acceso-sena/backend/kill-server.ps1",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1763531705538,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1763531705538,
+            "name": "Commit-0",
+            "content": "# Script para detener todos los procesos Node que usan el puerto 4000\r\nWrite-Host \"Buscando procesos usando el puerto 4000...\" -ForegroundColor Yellow\r\n\r\n$processes = netstat -ano | findstr :4000\r\n\r\nif ($processes) {\r\n    Write-Host \"Procesos encontrados:\" -ForegroundColor Cyan\r\n    $processes | ForEach-Object {\r\n        $parts = $_ -split '\\s+'\r\n        $pid = $parts[-1]\r\n        if ($pid -match '^\\d+$') {\r\n            Write-Host \"  PID: $pid\" -ForegroundColor Gray\r\n            try {\r\n                Stop-Process -Id $pid -Force -ErrorAction SilentlyContinue\r\n                Write-Host \"  ✓ Proceso $pid detenido\" -ForegroundColor Green\r\n            } catch {\r\n                Write-Host \"  ✗ No se pudo detener proceso $pid\" -ForegroundColor Red\r\n            }\r\n        }\r\n    }\r\n} else {\r\n    Write-Host \"No se encontraron procesos usando el puerto 4000\" -ForegroundColor Green\r\n}\r\n\r\nWrite-Host \"\"\r\nWrite-Host \"Deteniendo todos los procesos Node...\" -ForegroundColor Yellow\r\nGet-Process -Name node -ErrorAction SilentlyContinue | ForEach-Object {\r\n    try {\r\n        Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue\r\n        Write-Host \"  ✓ Proceso Node (PID: $($_.Id)) detenido\" -ForegroundColor Green\r\n    } catch {\r\n        Write-Host \"  ✗ No se pudo detener proceso Node (PID: $($_.Id))\" -ForegroundColor Red\r\n    }\r\n}\r\n\r\nWrite-Host \"\"\r\nWrite-Host \"Esperando 2 segundos...\" -ForegroundColor Yellow\r\nStart-Sleep -Seconds 2\r\n\r\nWrite-Host \"\"\r\nWrite-Host \"Verificando puerto 4000...\" -ForegroundColor Cyan\r\n$check = netstat -ano | findstr :4000\r\nif ($check) {\r\n    Write-Host \"⚠️  El puerto 4000 todavía está en uso\" -ForegroundColor Yellow\r\n    Write-Host $check\r\n} else {\r\n    Write-Host \"✅ El puerto 4000 está libre\" -ForegroundColor Green\r\n}\r\n\r\nWrite-Host \"\"\r\nWrite-Host \"Ahora puedes iniciar el servidor con: npm run dev\" -ForegroundColor Cyan\r\n\r\n\r\n\r\n"
+        }
+    ]
+}

@@ -1,0 +1,18 @@
+{
+    "sourceFile": "control-acceso-sena/backend/kill-server.bat",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1763531705548,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1763531705548,
+            "name": "Commit-0",
+            "content": "@echo off\r\necho ========================================\r\necho Deteniendo procesos Node en puerto 4000\r\necho ========================================\r\necho.\r\n\r\necho Buscando procesos usando el puerto 4000...\r\nfor /f \"tokens=5\" %%a in ('netstat -ano ^| findstr :4000') do (\r\n    echo Deteniendo proceso PID: %%a\r\n    taskkill /PID %%a /F >nul 2>&1\r\n    if errorlevel 1 (\r\n        echo   No se pudo detener proceso %%a\r\n    ) else (\r\n        echo   Proceso %%a detenido exitosamente\r\n    )\r\n)\r\n\r\necho.\r\necho Deteniendo todos los procesos Node...\r\ntaskkill /IM node.exe /F >nul 2>&1\r\nif errorlevel 1 (\r\n    echo   No se encontraron procesos Node corriendo\r\n) else (\r\n    echo   Todos los procesos Node fueron detenidos\r\n)\r\n\r\necho.\r\necho Esperando 2 segundos...\r\ntimeout /t 2 /nobreak >nul\r\n\r\necho.\r\necho Verificando puerto 4000...\r\nnetstat -ano | findstr :4000\r\nif errorlevel 1 (\r\n    echo   Puerto 4000 esta libre\r\n) else (\r\n    echo   ADVERTENCIA: El puerto 4000 todavia esta en uso\r\n)\r\n\r\necho.\r\necho ========================================\r\necho Ahora puedes iniciar el servidor con: npm run dev\r\necho ========================================\r\npause\r\n\r\n\r\n\r\n"
+        }
+    ]
+}
