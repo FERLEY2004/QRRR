@@ -101,6 +101,48 @@ class LogService {
   }
 
   /**
+   * Registrar intento de acceso con QR inválido
+   * Usa tipo 'acceso_sistema' ya que 'qr_invalido' no está en el ENUM de la tabla
+   */
+  static async qrInvalido(documento, motivo, detalles = {}, req = null) {
+    await this.logSeguridad(
+      'acceso_sistema',
+      null,
+      `[QR_INVALIDO] Documento ${documento}: ${motivo}`,
+      { subtipo: 'qr_invalido', documento, motivo, ...detalles },
+      req
+    );
+  }
+
+  /**
+   * Registrar acceso denegado (persona no registrada, inactiva, etc.)
+   * Usa tipo 'acceso_sistema' ya que 'acceso_denegado' no está en el ENUM de la tabla
+   */
+  static async accesoDenegado(documento, motivo, detalles = {}, req = null) {
+    await this.logSeguridad(
+      'acceso_sistema',
+      null,
+      `[ACCESO_DENEGADO] Documento ${documento}: ${motivo}`,
+      { subtipo: 'acceso_denegado', documento, motivo, ...detalles },
+      req
+    );
+  }
+
+  /**
+   * Registrar acceso exitoso (entrada/salida)
+   * Usa tipo 'acceso_sistema' ya que 'acceso_exitoso' no está en el ENUM de la tabla
+   */
+  static async accesoExitoso(userId, personaId, documento, nombre, accion, req = null) {
+    await this.logSeguridad(
+      'acceso_sistema',
+      userId,
+      `[ACCESO_EXITOSO] ${accion === 'entrada' ? 'Entrada' : 'Salida'} de ${nombre} (${documento})`,
+      { subtipo: 'acceso_exitoso', personaId, documento, nombre, accion },
+      req
+    );
+  }
+
+  /**
    * Registrar evento de auditoría (cambios en la base de datos)
    * @param {string} tablaAfectada - Nombre de la tabla
    * @param {number} idRegistro - ID del registro afectado

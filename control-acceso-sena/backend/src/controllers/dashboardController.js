@@ -89,13 +89,14 @@ export const getMetrics = async (req, res) => {
       outOfScheduleAccess = 0;
     }
 
-    // Alertas pendientes dinamicas
+    // Alertas pendientes de la base de datos (sin ejecutar detección cada vez)
     let pendingAlerts = 0;
     try {
-      const dynamicAlerts = await AlertService.generateAlerts();
-      pendingAlerts = dynamicAlerts.length;
+      // Solo obtener estadísticas de alertas existentes
+      const alertStats = await AlertService.getAlertStats();
+      pendingAlerts = alertStats.pendientes || 0;
     } catch (error) {
-      console.warn('⚠️  No se pudieron generar alertas dinámicas, usando heurística:', error.message);
+      console.warn('⚠️  No se pudieron obtener alertas, usando heurística:', error.message);
       // fallback: usar accesos fuera de horario detectados
       pendingAlerts = outOfScheduleAccess;
     }
@@ -183,13 +184,30 @@ export const getMetrics = async (req, res) => {
 
 export const getAlerts = async (req, res) => {
   try {
-    const alerts = await AlertService.generateAlerts();
+    // Obtener alertas de la base de datos (sin ejecutar detección cada vez)
+    const filters = {
+      tipo: req.query.tipo || null,
+      severidad: req.query.severidad || null,
+      leida: req.query.leida === 'true' ? true : (req.query.leida === 'false' ? false : null),
+      limit: parseInt(req.query.limit) || 100 // Aumentado a 100
+    };
+
+    console.log('📋 [getAlerts] Filtros recibidos:', filters);
+
+    const alerts = await AlertService.getAlerts(filters);
+    
+    console.log(`📋 [getAlerts] Alertas encontradas: ${alerts.length}`);
+    if (alerts.length > 0) {
+      console.log('📋 [getAlerts] Primera alerta:', JSON.stringify(alerts[0], null, 2));
+    }
+    
     res.json({
       success: true,
-      data: alerts
+      data: alerts,
+      total: alerts.length
     });
   } catch (error) {
-    console.error('Error en getAlerts:', error);
+    console.error('❌ Error en getAlerts:', error);
     res.status(500).json({
       success: false,
       message: 'Error al obtener alertas',
@@ -198,32 +216,128 @@ export const getAlerts = async (req, res) => {
   }
 };
 
-export const resolveAlert = async (req, res) => {
+// Ejecutar detección de alertas manualmente
+export const runAlertDetection = async (req, res) => {
   try {
-    const { alertId } = req.params;
-    AlertService.markResolved(alertId);
-    await createSecurityLog({
-      tipo: 'operacion_admin',
-      id_usuario: req.user.id,
-      ip_address: req.ip,
-      user_agent: req.get('user-agent'),
-      accion: `Resolución manual de alerta: ${alertId}`,
-      detalles: { alertId },
-      exito: true
-    });
+    const results = await AlertService.runAllDetections();
+    
     res.json({
       success: true,
-      message: 'Alerta marcada como resuelta'
+      message: 'Detección de alertas ejecutada',
+      alertasCreadas: results
     });
   } catch (error) {
-    console.error('Error en resolveAlert:', error);
+    console.error('Error en runAlertDetection:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al resolver la alerta',
+      message: 'Error al ejecutar detección de alertas',
       error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 };
+
+export const markAlertAsRead = async (req, res) => {
+  try {
+    const { alertId } = req.params;
+    const userId = req.user?.id;
+
+    const success = await AlertService.markAsRead(alertId, userId);
+
+    if (!success) {
+      return res.status(404).json({
+        success: false,
+        message: 'Alerta no encontrada'
+      });
+    }
+
+    try {
+      await createSecurityLog({
+        tipo: 'operacion_admin',
+        id_usuario: userId,
+        ip_address: req.ip,
+        user_agent: req.get('user-agent'),
+        accion: `Alerta ${alertId} marcada como leída`,
+        detalles: { alertId },
+        exito: true
+      });
+    } catch (logError) {
+      console.warn('Error creando log (no crítico):', logError.message);
+    }
+
+    res.json({
+      success: true,
+      message: 'Alerta marcada como leída'
+    });
+  } catch (error) {
+    console.error('Error en markAlertAsRead:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al marcar alerta como leída',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
+
+export const deleteAlert = async (req, res) => {
+  try {
+    const { alertId } = req.params;
+    const userId = req.user?.id;
+
+    const success = await AlertService.deleteAlert(alertId);
+
+    if (!success) {
+      return res.status(404).json({
+        success: false,
+        message: 'Alerta no encontrada'
+      });
+    }
+
+    try {
+      await createSecurityLog({
+        tipo: 'operacion_admin',
+        id_usuario: userId,
+        ip_address: req.ip,
+        user_agent: req.get('user-agent'),
+        accion: `Alerta ${alertId} eliminada`,
+        detalles: { alertId },
+        exito: true
+      });
+    } catch (logError) {
+      console.warn('Error creando log (no crítico):', logError.message);
+    }
+
+    res.json({
+      success: true,
+      message: 'Alerta eliminada correctamente'
+    });
+  } catch (error) {
+    console.error('Error en deleteAlert:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al eliminar alerta',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
+
+export const getAlertStats = async (req, res) => {
+  try {
+    const stats = await AlertService.getAlertStats();
+    res.json({
+      success: true,
+      data: stats
+    });
+  } catch (error) {
+    console.error('Error en getAlertStats:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al obtener estadísticas de alertas'
+    });
+  }
+};
+
+// Mantener compatibilidad con resolveAlert (alias de markAlertAsRead)
+export const resolveAlert = markAlertAsRead;
 
 // Endpoint de diagnóstico - Verificar estadísticas de accesos
 export const getAccessStats = async (req, res) => {

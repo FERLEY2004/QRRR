@@ -6,7 +6,6 @@ import autoTable from 'jspdf-autotable';
 
 const Reports = () => {
   const [stats, setStats] = useState(null);
-  const [currentPeople, setCurrentPeople] = useState([]);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [loading, setLoading] = useState(true);
 
@@ -17,13 +16,8 @@ const Reports = () => {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [statsRes, peopleRes] = await Promise.all([
-        accessAPI.getDailyStats(selectedDate).catch(() => ({ stats: null })),
-        accessAPI.getCurrentPeople().catch(() => ({ people: [] }))
-      ]);
-
+      const statsRes = await accessAPI.getDailyStats(selectedDate).catch(() => ({ stats: null }));
       setStats(statsRes?.stats);
-      setCurrentPeople(peopleRes?.people || []);
     } catch (error) {
       console.error('Error cargando reportes:', error);
     } finally {
@@ -88,49 +82,6 @@ const Reports = () => {
       yPosition = doc.lastAutoTable.finalY + 15;
     }
     
-    // Personas actualmente dentro
-    if (currentPeople.length > 0) {
-      doc.setFontSize(16);
-      doc.setTextColor(...primaryColor);
-      doc.text('Personas Actualmente Dentro', 14, yPosition);
-      yPosition += 10;
-      
-      // Preparar datos de la tabla
-      const peopleData = currentPeople.map(person => [
-        person.nombre || 'N/A',
-        person.documento || 'N/A',
-        person.rol || 'N/A',
-        person.fecha_entrada 
-          ? new Date(person.fecha_entrada).toLocaleString('es-CO', {
-              day: '2-digit',
-              month: '2-digit',
-              year: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit'
-            })
-          : 'N/A'
-      ]);
-      
-      autoTable(doc, {
-        startY: yPosition,
-        head: [['Nombre', 'Documento', 'Rol', 'Hora Entrada']],
-        body: peopleData,
-        theme: 'striped',
-        headStyles: { fillColor: primaryColor, textColor: 255 },
-        styles: { fontSize: 9 },
-        margin: { left: 14, right: 14 },
-        columnStyles: {
-          0: { cellWidth: 60 },
-          1: { cellWidth: 40 },
-          2: { cellWidth: 40 },
-          3: { cellWidth: 50 }
-        }
-      });
-    } else {
-      doc.setFontSize(12);
-      doc.setTextColor(...secondaryColor);
-      doc.text('No hay personas dentro del centro actualmente', 14, yPosition);
-    }
     
     // Pie de página
     const pageCount = doc.internal.getNumberOfPages();
@@ -249,37 +200,6 @@ const Reports = () => {
           </div>
         )}
 
-        <div className="bg-white rounded-lg shadow-lg p-6">
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">Personas Actualmente Dentro</h2>
-          {currentPeople.length === 0 ? (
-            <p className="text-gray-500 text-center py-8">No hay personas dentro del centro</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nombre</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Documento</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rol</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Hora Entrada</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {currentPeople.map((person) => (
-                    <tr key={person.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 text-sm font-medium text-gray-900">{person.nombre}</td>
-                      <td className="px-4 py-3 text-sm text-gray-600">{person.documento}</td>
-                      <td className="px-4 py-3 text-sm text-gray-600">{person.rol}</td>
-                      <td className="px-4 py-3 text-sm text-gray-600">
-                        {new Date(person.fecha_entrada).toLocaleString('es-CO')}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
       </div>
     </div>
   );

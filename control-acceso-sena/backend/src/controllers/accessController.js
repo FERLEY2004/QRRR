@@ -3,6 +3,8 @@ import Person from '../models/Person.js';
 import Access from '../models/Access.js';
 import { IntegrationService } from '../services/IntegrationService.js';
 import pool from '../utils/dbPool.js';
+import LogService from '../services/LogService.js';
+import AlertService from '../services/AlertService.js';
 
 // Procesar escaneo de QR
 export const scanQR = async (req, res) => {
@@ -22,6 +24,16 @@ export const scanQR = async (req, res) => {
     try {
       qrInfo = typeof qrData === 'string' ? JSON.parse(qrData) : qrData;
     } catch (error) {
+      // Registrar intento con QR mal formado
+      await LogService.qrInvalido('desconocido', 'Formato QR inválido - no se pudo parsear', { rawData: typeof qrData === 'string' ? qrData.substring(0, 100) : 'no-string' }, req);
+      // Crear alerta directamente
+      await AlertService.createAlert({
+        tipo: 'intento_fraudulento',
+        severidad: 'media',
+        titulo: 'QR Inválido Detectado',
+        mensaje: 'Intento de acceso con QR mal formado que no se pudo parsear',
+        metadata: { subtipo: 'qr_invalido', ip: req.ip }
+      });
       return res.status(400).json({
         success: false,
         message: 'Formato QR inválido'
@@ -33,6 +45,7 @@ export const scanQR = async (req, res) => {
 
     // Validar tipo de QR
     if (!type || !documento) {
+      await LogService.qrInvalido(documento || 'desconocido', 'QR incompleto - falta tipo o documento', { type, documento }, req);
       return res.status(400).json({
         success: false,
         message: 'QR incompleto o inválido'
@@ -56,6 +69,21 @@ export const scanQR = async (req, res) => {
         const hoursDiff = (now - qrDate) / (1000 * 60 * 60);
 
         if (hoursDiff > 24) {
+          await LogService.qrInvalido(documento, 'QR de visitante expirado (más de 24 horas)', { nombre, hoursDiff: Math.round(hoursDiff) }, req);
+          // Crear alerta de QR expirado
+          await AlertService.createAlert({
+            tipo: 'qr_expirado',
+            severidad: 'media',
+            titulo: 'QR de Visitante Expirado',
+            mensaje: `Intento de acceso con QR expirado. Documento: ${documento}, Nombre: ${nombre || 'N/A'}. El QR tiene ${Math.round(hoursDiff)} horas de antigüedad.`,
+            metadata: {
+              subtipo: 'qr_expirado',
+              documento,
+              nombre: nombre || 'N/A',
+              horas_antiguedad: Math.round(hoursDiff),
+              ip: req.ip
+            }
+          });
           return res.status(403).json({
             success: false,
             message: 'QR de visitante expirado (más de 24 horas)',
@@ -123,13 +151,15 @@ export const scanQR = async (req, res) => {
         // Verificar estado de la persona
         if (isPersonVisitor && person.estado !== 'ACTIVO') {
           console.log(`🚫 Visitante ${person.documento} tiene estado ${person.estado}, bloqueando entrada`);
+          const nombreCompleto = person.nombre || `${person.nombres || ''} ${person.apellidos || ''}`.trim();
+          await LogService.accesoDenegado(person.documento, 'QR de visitante ya utilizado - requiere regeneración', { nombre: nombreCompleto, estado: person.estado }, req);
           return res.status(403).json({
             success: false,
             message: 'Este QR ya fue utilizado en una visita anterior. Solicita un nuevo QR de visitante',
             code: 'QR_REQUIERE_REGENERACION',
             person: {
               documento: person.documento,
-              nombre: person.nombre || `${person.nombres || ''} ${person.apellidos || ''}`.trim()
+              nombre: nombreCompleto
             }
           });
         }
@@ -144,13 +174,15 @@ export const scanQR = async (req, res) => {
           
           if (visitorRows.length > 0 && visitorRows[0].estado !== 'ACTIVO') {
             console.log(`🚫 Registro de visitante ${person.documento} tiene estado ${visitorRows[0].estado}, bloqueando`);
+            const nombreCompleto = person.nombre || `${person.nombres || ''} ${person.apellidos || ''}`.trim();
+            await LogService.accesoDenegado(person.documento, 'QR de visitante ya utilizado (registro finalizado)', { nombre: nombreCompleto, estadoVisitante: visitorRows[0].estado }, req);
             return res.status(403).json({
               success: false,
               message: 'Este QR ya fue utilizado en una visita anterior. Solicita un nuevo QR de visitante',
               code: 'QR_REQUIERE_REGENERACION',
               person: {
                 documento: person.documento,
-                nombre: person.nombre || `${person.nombres || ''} ${person.apellidos || ''}`.trim()
+                nombre: nombreCompleto
               }
             });
           }
@@ -257,6 +289,7 @@ export const scanQR = async (req, res) => {
       
       if (personAnyStatus && personAnyStatus.estado !== 'activo') {
         // La persona existe pero está inactiva - RECHAZAR ACCESO
+        await LogService.accesoDenegado(personAnyStatus.documento, `Usuario inactivo (estado: ${personAnyStatus.estado})`, { nombre: personAnyStatus.nombre, estado: personAnyStatus.estado, rol: personAnyStatus.nombre_rol || personAnyStatus.rol }, req);
         return res.status(403).json({
           success: false,
           message: `Acceso denegado: El usuario está ${personAnyStatus.estado === 'inactivo' ? 'inactivo' : personAnyStatus.estado}`,
@@ -271,6 +304,20 @@ export const scanQR = async (req, res) => {
       }
       
       // Si no existe en la base de datos, RECHAZAR ACCESO (incluso con QR válido)
+      await LogService.accesoDenegado(documento, 'Persona no registrada en el sistema', { nombre: nombre || 'No proporcionado', tipo: type }, req);
+      // Crear alerta directamente
+      await AlertService.createAlert({
+        tipo: 'documento_no_registrado',
+        severidad: 'alta',
+        titulo: 'Acceso Denegado - No Registrado',
+        mensaje: `Intento de acceso con documento ${documento} (${nombre || 'sin nombre'}). Persona no registrada en el sistema.`,
+        metadata: { 
+          subtipo: 'acceso_denegado', 
+          documento, 
+          nombre: nombre || 'No proporcionado',
+          ip: req.ip 
+        }
+      });
       return res.status(403).json({
         success: false,
         message: 'Acceso denegado: La persona no está registrada en el sistema',
@@ -285,6 +332,7 @@ export const scanQR = async (req, res) => {
 
     // Validación adicional: Verificar que la persona sigue activa antes de permitir acceso
     if (person.estado !== 'activo' && person.estado !== 'ACTIVO') {
+      await LogService.accesoDenegado(person.documento, `Usuario con estado ${person.estado}`, { nombre: person.nombre, estado: person.estado, rol: person.nombre_rol || person.rol }, req);
       return res.status(403).json({
         success: false,
         message: `Acceso denegado: El usuario está ${person.estado === 'inactivo' || person.estado === 'INACTIVO' ? 'inactivo' : person.estado}`,
@@ -328,13 +376,15 @@ export const scanQR = async (req, res) => {
         const latest = visitorRows[0];
         if (!latest || latest.estado !== 'ACTIVO') {
           console.log(`🚫 QR de visitante ${person.documento} ya fue usado. Estado: ${latest?.estado || 'sin registro'}`);
+          const nombreCompleto = person.nombre || `${person.nombres || ''} ${person.apellidos || ''}`.trim();
+          await LogService.accesoDenegado(person.documento, 'Intento de reingreso con QR de visitante ya utilizado', { nombre: nombreCompleto, estadoVisitante: latest?.estado || 'sin registro' }, req);
           return res.status(403).json({
             success: false,
             message: 'El QR ya fue utilizado para una visita anterior. Solicita un nuevo QR de visitante',
             code: 'QR_REQUIERE_REGENERACION',
             person: {
               documento: person.documento,
-              nombre: person.nombre || `${person.nombres || ''} ${person.apellidos || ''}`.trim()
+              nombre: nombreCompleto
             }
           });
         }

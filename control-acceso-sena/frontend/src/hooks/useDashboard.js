@@ -31,7 +31,7 @@ const useDashboard = () => {
             return { success: false, people: [] };
           });
         }),
-        dashboardAPI.getAlerts().catch(err => {
+        dashboardAPI.getAlerts({ limit: 100 }).catch(err => {
           console.error('Error fetching alerts:', err);
           return { success: false, data: [] };
         })

@@ -133,8 +133,8 @@ export const dashboardAPI = {
         throw err;
       }),
   
-  getAlerts: () =>
-    api.get('/dashboard/alerts')
+  getAlerts: (filters = {}) =>
+    api.get('/dashboard/alerts', { params: filters })
       .then(res => {
         console.log('🚨 [API] Respuesta de alertas:', res.data);
         return res.data;
@@ -143,8 +143,42 @@ export const dashboardAPI = {
         console.error('❌ [API] Error en getAlerts:', err);
         throw err;
       }),
+
+  getAlertStats: () =>
+    api.get('/dashboard/alerts/stats')
+      .then(res => res.data)
+      .catch(err => {
+        console.error('❌ [API] Error en getAlertStats:', err);
+        throw err;
+      }),
+
+  runAlertDetection: () =>
+    api.post('/dashboard/alerts/detect')
+      .then(res => res.data)
+      .catch(err => {
+        console.error('❌ [API] Error en runAlertDetection:', err);
+        throw err;
+      }),
+
+  markAlertAsRead: (alertId) =>
+    api.put(`/dashboard/alerts/${alertId}/read`)
+      .then(res => res.data)
+      .catch(err => {
+        console.error('❌ [API] Error en markAlertAsRead:', err);
+        throw err;
+      }),
+
+  deleteAlert: (alertId) =>
+    api.delete(`/dashboard/alerts/${alertId}`)
+      .then(res => res.data)
+      .catch(err => {
+        console.error('❌ [API] Error en deleteAlert:', err);
+        throw err;
+      }),
+
+  // Alias para compatibilidad
   resolveAlert: (alertId) =>
-    api.post(`/dashboard/alerts/${alertId}/resolve`)
+    api.put(`/dashboard/alerts/${alertId}/read`)
       .then(res => res.data)
       .catch(err => {
         console.error('❌ [API] Error en resolveAlert:', err);

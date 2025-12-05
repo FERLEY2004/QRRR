@@ -30,7 +30,7 @@ cd control-acceso-sena
 ### 2. Configurar Base de Datos
 
 1. Crear la base de datos `control_acceso_sena` en MySQL
-2. Importar el esquema SQL (si está disponible)
+2. Importar el esquema SQL (Mysql.sql)
 3. Configurar las credenciales en `.env` del backend
 
 ### 3. Configurar Backend
@@ -103,7 +103,7 @@ La aplicación estará disponible en `http://localhost:5173`
 1. Iniciar sesión como guarda o admin
 2. Ir a "Scanner" en el menú
 3. Activar la cámara
-4. Escanear el código QR del aprendiz/visitante
+4. Escanear el código QR del aprendiz/visitante/instructor
 5. El sistema registrará automáticamente entrada o salida
 
 ### Registrar Visitante
