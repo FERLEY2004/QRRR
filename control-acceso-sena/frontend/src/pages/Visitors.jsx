@@ -29,6 +29,7 @@ const Visitors = () => {
     documento: '',
     tipo_documento: 'CC',
     motivo_visita: '',
+    zona_destino: '',
     contacto: ''
   });
   const [loading, setLoading] = useState(false);
@@ -60,6 +61,7 @@ const Visitors = () => {
         expiresAt: result.expiresAt,
         nombre: result.visitor?.nombre || formData.nombre,
         motivo_visita: result.visitor?.motivo_visita || formData.motivo_visita,
+        zona_destino: result.visitor?.zona_destino || formData.zona_destino,
         contacto: result.visitor?.contacto || formData.contacto
       });
       // Limpiar formulario
@@ -68,6 +70,7 @@ const Visitors = () => {
         documento: '',
         tipo_documento: 'CC',
         motivo_visita: '',
+        zona_destino: '',
         contacto: ''
       });
     } catch (err) {
@@ -173,6 +176,36 @@ const Visitors = () => {
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                   placeholder="Ej: Reunión con instructor, entrega de documentos..."
                 />
+              </div>
+
+              <div>
+                <label htmlFor="zona_destino" className="block text-sm font-medium text-gray-700 mb-2">
+                  Zona de Destino *
+                </label>
+                <select
+                  id="zona_destino"
+                  name="zona_destino"
+                  value={formData.zona_destino}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                >
+                  <option value="">Seleccione una zona...</option>
+                  <option value="Recepción">Recepción</option>
+                  <option value="Administración">Administración</option>
+                  <option value="Coordinación Académica">Coordinación Académica</option>
+                  <option value="Bienestar al Aprendiz">Bienestar al Aprendiz</option>
+                  <option value="Biblioteca">Biblioteca</option>
+                  <option value="Talleres">Talleres</option>
+                  <option value="Laboratorios">Laboratorios</option>
+                  <option value="Aulas de Formación">Aulas de Formación</option>
+                  <option value="Cafetería">Cafetería</option>
+                  <option value="Auditorio">Auditorio</option>
+                  <option value="Enfermería">Enfermería</option>
+                  <option value="Zona Deportiva">Zona Deportiva</option>
+                  <option value="Almacén">Almacén</option>
+                  <option value="Otra">Otra</option>
+                </select>
               </div>
 
               <div>
@@ -304,12 +337,38 @@ const Visitors = () => {
                       ctx.textAlign = 'center';
                       ctx.textBaseline = 'top';
                       
-                      // Dibujar información (motivo de visita)
+                      // Dibujar nombre
+                      if (qrData.nombre) {
+                        ctx.font = 'bold 18px Arial, sans-serif';
+                        ctx.fillStyle = '#374151';
+                        ctx.fillText('Visitante:', textX, currentY);
+                        currentY += 25;
+                        
+                        ctx.font = '16px Arial, sans-serif';
+                        ctx.fillStyle = '#1f2937';
+                        ctx.fillText(qrData.nombre, textX, currentY);
+                        currentY += 30;
+                      }
+
+                      // Dibujar zona de destino
+                      if (qrData.zona_destino) {
+                        ctx.font = 'bold 18px Arial, sans-serif';
+                        ctx.fillStyle = '#374151';
+                        ctx.fillText('Zona de Destino:', textX, currentY);
+                        currentY += 25;
+                        
+                        ctx.font = '16px Arial, sans-serif';
+                        ctx.fillStyle = '#2563eb';
+                        ctx.fillText(qrData.zona_destino, textX, currentY);
+                        currentY += 30;
+                      }
+                      
+                      // Dibujar motivo de visita
                       if (qrData.motivo_visita) {
                         ctx.font = 'bold 18px Arial, sans-serif';
                         ctx.fillStyle = '#374151';
-                        ctx.fillText('Motivo de Visita:', textX, currentY);
-                        currentY += 30;
+                        ctx.fillText('Motivo:', textX, currentY);
+                        currentY += 25;
                         
                         ctx.font = '14px Arial, sans-serif';
                         ctx.fillStyle = '#4b5563';
@@ -322,27 +381,14 @@ const Visitors = () => {
                         currentY += 10;
                       }
                       
-                      // Dibujar nombre
-                      if (qrData.nombre) {
-                        ctx.font = 'bold 18px Arial, sans-serif';
-                        ctx.fillStyle = '#374151';
-                        ctx.fillText('Nombre:', textX, currentY);
-                        currentY += 30;
-                        
-                        ctx.font = '16px Arial, sans-serif';
-                        ctx.fillStyle = '#1f2937';
-                        ctx.fillText(qrData.nombre, textX, currentY);
-                        currentY += 30;
-                      }
-                      
                       // Dibujar contacto
                       if (qrData.contacto) {
-                        ctx.font = 'bold 18px Arial, sans-serif';
+                        ctx.font = 'bold 16px Arial, sans-serif';
                         ctx.fillStyle = '#374151';
                         ctx.fillText('Contacto:', textX, currentY);
-                        currentY += 30;
+                        currentY += 22;
                         
-                        ctx.font = '16px Arial, sans-serif';
+                        ctx.font = '14px Arial, sans-serif';
                         ctx.fillStyle = '#1f2937';
                         ctx.fillText(qrData.contacto, textX, currentY);
                       }

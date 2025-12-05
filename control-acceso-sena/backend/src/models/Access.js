@@ -45,15 +45,15 @@ export default class Access {
     // Estadísticas usando registros_entrada_salida (circuito abierto)
     let accessRows;
     try {
-      [accessRows] = await pool.execute(
-        `SELECT 
-          COUNT(*) as total_registros,
-          COUNT(CASE WHEN tipo = 'ENTRADA' THEN 1 END) as entradas,
-          COUNT(CASE WHEN tipo = 'SALIDA' THEN 1 END) as salidas
-         FROM registros_entrada_salida
-         WHERE DATE(fecha_hora) = ?`,
-        [targetDate]
-      );
+        [accessRows] = await pool.execute(
+          `SELECT 
+            COUNT(*) as total_registros,
+            COUNT(CASE WHEN tipo = 'ENTRADA' THEN 1 END) as entradas,
+            COUNT(CASE WHEN tipo = 'SALIDA' THEN 1 END) as salidas
+           FROM registros_entrada_salida
+           WHERE DATE(fecha_hora) = ?`,
+          [targetDate]
+        );
     } catch (error) {
       console.warn('⚠️  Error obteniendo estadísticas del día, usando valores por defecto:', error.message);
       accessRows = [{ total_registros: 0, entradas: 0, salidas: 0 }];

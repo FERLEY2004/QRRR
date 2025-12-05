@@ -6,7 +6,7 @@ import Person from '../models/Person.js';
 
 export const createVisitor = async (req, res) => {
   try {
-    const { nombre, documento, tipo_documento, motivo_visita, contacto, persona_visita } = req.body;
+    const { nombre, documento, tipo_documento, motivo_visita, zona_destino, contacto, persona_visita } = req.body;
     const userId = req.user.id;
 
     if (!nombre || !documento || !motivo_visita) {
@@ -59,9 +59,9 @@ export const createVisitor = async (req, res) => {
 
     // Crear registro en tabla Visitantes
     const [visitorResult] = await pool.execute(
-      `INSERT INTO visitantes (id_persona, motivo_visita, contacto, persona_visita, estado, fecha_inicio)
-       VALUES (?, ?, ?, ?, 'ACTIVO', NOW())`,
-      [personId, motivo_visita, contacto || null, persona_visita || null]
+      `INSERT INTO visitantes (id_persona, motivo_visita, zona_destino, contacto, persona_visita, estado, fecha_inicio)
+       VALUES (?, ?, ?, ?, ?, 'ACTIVO', NOW())`,
+      [personId, motivo_visita, zona_destino || null, contacto || null, persona_visita || null]
     );
 
     const visitorId = visitorResult.insertId;
@@ -101,6 +101,7 @@ export const createVisitor = async (req, res) => {
         documento,
         tipo_documento: tipo_documento || 'CC',
         motivo_visita,
+        zona_destino,
         contacto,
         persona_visita
       },

@@ -201,58 +201,61 @@ const AlertsPanel = ({ alerts = [], loading = false, onAlertUpdate }) => {
   const handleResolveAlert = handleMarkAsRead;
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-2">
+    <div className="bg-white rounded-lg shadow-lg p-4 overflow-hidden">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <h2 className="text-xl font-bold text-gray-800">🔔 Alertas</h2>
+          <h2 className="text-lg font-bold text-gray-800">🔔 Alertas</h2>
           {alerts.length > 0 && (
-            <span className="bg-red-100 text-red-800 text-xs font-semibold px-2 py-1 rounded-full">
+            <span className="bg-red-100 text-red-800 text-xs font-semibold px-2 py-0.5 rounded-full">
               {alerts.length}
             </span>
           )}
-          <button
-            onClick={handleRunDetection}
-            disabled={detecting}
-            className="ml-2 px-2 py-1 text-xs bg-blue-500 hover:bg-blue-600 text-white rounded transition disabled:opacity-50"
-            title="Ejecutar detección de alertas"
-          >
-            {detecting ? '⏳' : '🔍'} Detectar
-          </button>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <select
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-          >
-            <option value="pending">Pendientes</option>
-            <option value="read">Leídas</option>
-            <option value="all">Todas</option>
-          </select>
-          <select
-            value={filterType}
-            onChange={(e) => setFilterType(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-          >
-            <option value="all">Todos los tipos</option>
-            <option value="intento_fraudulento">QR Inválido</option>
-            <option value="documento_no_registrado">Acceso Denegado</option>
-            <option value="comportamiento_sospechoso">Comportamiento Sospechoso</option>
-            <option value="acceso_fuera_horario">Fuera de Horario</option>
-            <option value="qr_expirado">QR Expirado</option>
-          </select>
-          <select
-            value={filterSeverity}
-            onChange={(e) => setFilterSeverity(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-          >
-            <option value="all">Todas</option>
-            <option value="critica">Crítica</option>
-            <option value="alta">Alta</option>
-            <option value="media">Media</option>
-            <option value="baja">Baja</option>
-          </select>
-        </div>
+        <button
+          onClick={handleRunDetection}
+          disabled={detecting}
+          className="px-2 py-1 text-xs bg-blue-500 hover:bg-blue-600 text-white rounded transition disabled:opacity-50 whitespace-nowrap"
+          title="Ejecutar detección de alertas"
+        >
+          {detecting ? '⏳' : '🔍'} Detectar
+        </button>
+      </div>
+      
+      {/* Filtros en columna */}
+      <div className="grid grid-cols-1 gap-2 mb-3">
+        <select
+          value={filterStatus}
+          onChange={(e) => setFilterStatus(e.target.value)}
+          className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+        >
+          <option value="all">Todas</option>
+          <option value="pending">Pendientes</option>
+          <option value="read">Leídas</option>
+        </select>
+        <select
+          value={filterType}
+          onChange={(e) => setFilterType(e.target.value)}
+          className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+        >
+          <option value="all">Todos los tipos</option>
+          <option value="intento_fraudulento">QR Inválido</option>
+          <option value="documento_no_registrado">Acceso Denegado</option>
+          <option value="comportamiento_sospechoso">Sospechoso</option>
+          <option value="acceso_fuera_horario">Fuera de Horario</option>
+          <option value="qr_expirado">QR Expirado</option>
+        </select>
+        <select
+          value={filterSeverity}
+          onChange={(e) => setFilterSeverity(e.target.value)}
+          className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+        >
+          <option value="all">Todas</option>
+          <option value="critica">Crítica</option>
+          <option value="alta">Alta</option>
+          <option value="media">Media</option>
+          <option value="baja">Baja</option>
+        </select>
       </div>
 
       {loading ? (
@@ -261,88 +264,77 @@ const AlertsPanel = ({ alerts = [], loading = false, onAlertUpdate }) => {
           <p className="mt-2 text-gray-600">Cargando...</p>
         </div>
       ) : filteredAlerts.length === 0 ? (
-        <div className="text-center py-8 text-gray-500">
-          <svg className="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="text-center py-6 text-gray-500">
+          <svg className="w-10 h-10 mx-auto mb-2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-          <p>{filterSeverity !== 'all' ? 'No hay alertas de esta severidad' : 'No hay alertas pendientes'}</p>
+          <p className="text-sm">{filterSeverity !== 'all' || filterType !== 'all' || filterStatus !== 'all' ? 'Sin alertas con los filtros aplicados' : 'Sin alertas pendientes'}</p>
         </div>
       ) : (
-        <div className="space-y-3 max-h-96 overflow-y-auto">
+        <div className="space-y-2 max-h-80 overflow-y-auto">
           {filteredAlerts.map((alert, index) => {
             const severity = getSeverity(alert);
             const alertId = getAlertId(alert);
             const createdAt = alert.createdAt || alert.fecha_creacion;
             const alertType = alert.type || alert.tipo || 'general';
             const isRead = alert.leida === true || alert.leida === 1;
-            // Key única usando id_alerta + timestamp para evitar duplicados
             const uniqueKey = `alert-${alert.id_alerta || alertId}-${index}-${createdAt}`;
             return (
               <div
                 key={uniqueKey}
-                className={`p-4 rounded-lg border-2 transition-all ${getSeverityColor(severity)} ${isRead ? 'opacity-50 grayscale-[30%]' : 'shadow-sm'}`}
+                className={`p-3 rounded-lg border transition-all ${getSeverityColor(severity)} ${isRead ? 'opacity-50 grayscale-[30%]' : 'shadow-sm'}`}
               >
-                <div className="flex items-start gap-3">
-                  <span className={`text-2xl ${isRead ? 'grayscale' : ''}`}>{getAlertTypeIcon(alertType)}</span>
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between mb-1">
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-semibold text-sm">{alert.title || alert.titulo}</h3>
-                        <span className="text-xs px-2 py-0.5 bg-gray-200 text-gray-600 rounded">
+                {/* Header de la alerta */}
+                <div className="flex items-start justify-between gap-2 mb-1">
+                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                    <span className={`text-lg flex-shrink-0 ${isRead ? 'grayscale' : ''}`}>{getAlertTypeIcon(alertType)}</span>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="font-semibold text-sm truncate">{alert.title || alert.titulo}</h3>
+                      <div className="flex items-center gap-1 flex-wrap">
+                        <span className="text-[10px] px-1.5 py-0.5 bg-gray-200 text-gray-600 rounded">
                           {getAlertTypeName(alertType)}
                         </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className={`text-xs px-2 py-1 rounded-full ${getSeverityColor(severity)}`}>
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded ${getSeverityColor(severity)}`}>
                           {severity.toUpperCase()}
                         </span>
                         {isRead && (
-                          <span className="text-xs px-2 py-1 bg-gray-300 text-gray-600 rounded-full flex items-center gap-1">
-                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                            </svg>
-                            Leída
-                          </span>
-                        )}
-                        {!isRead && (
-                          <button
-                            onClick={() => handleMarkAsRead(alert)}
-                            disabled={resolvingAlerts.has(alertId)}
-                            className="text-xs px-2 py-1 bg-green-500 hover:bg-green-600 text-white rounded transition disabled:opacity-50"
-                            title="Marcar como leída"
-                          >
-                            {resolvingAlerts.has(alertId) ? '...' : '✓'}
-                          </button>
-                        )}
-                        <button
-                          onClick={() => handleDeleteAlert(alert)}
-                          disabled={resolvingAlerts.has(alertId)}
-                          className="text-xs px-2 py-1 bg-red-500 hover:bg-red-600 text-white rounded transition disabled:opacity-50"
-                          title="Eliminar alerta"
-                        >
-                          {resolvingAlerts.has(alertId) ? '...' : '✕'}
-                        </button>
-                      </div>
-                    </div>
-                    <p className="text-sm mb-2">{alert.message || alert.mensaje}</p>
-                    <div className="flex items-center justify-between">
-                      <p className="text-xs opacity-75">
-                        {formatDateTime(createdAt)}
-                      </p>
-                      <div className="flex items-center gap-2">
-                        {alert.metadata?.documento && (
-                          <span className="text-xs text-gray-600">
-                            Doc: {alert.metadata.documento}
-                          </span>
-                        )}
-                        {alert.metadata?.rol && (
-                          <span className="text-xs text-blue-600 uppercase">
-                            {alert.metadata.rol}
+                          <span className="text-[10px] px-1.5 py-0.5 bg-gray-300 text-gray-600 rounded flex items-center gap-0.5">
+                            ✓ Leída
                           </span>
                         )}
                       </div>
                     </div>
                   </div>
+                  {/* Botones de acción */}
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    {!isRead && (
+                      <button
+                        onClick={() => handleMarkAsRead(alert)}
+                        disabled={resolvingAlerts.has(alertId)}
+                        className="w-6 h-6 flex items-center justify-center bg-green-500 hover:bg-green-600 text-white rounded text-xs transition disabled:opacity-50"
+                        title="Marcar como leída"
+                      >
+                        {resolvingAlerts.has(alertId) ? '·' : '✓'}
+                      </button>
+                    )}
+                    <button
+                      onClick={() => handleDeleteAlert(alert)}
+                      disabled={resolvingAlerts.has(alertId)}
+                      className="w-6 h-6 flex items-center justify-center bg-red-500 hover:bg-red-600 text-white rounded text-xs transition disabled:opacity-50"
+                      title="Eliminar alerta"
+                    >
+                      {resolvingAlerts.has(alertId) ? '·' : '✕'}
+                    </button>
+                  </div>
+                </div>
+                {/* Mensaje */}
+                <p className="text-xs text-gray-700 mb-1 line-clamp-2">{alert.message || alert.mensaje}</p>
+                {/* Footer */}
+                <div className="flex items-center justify-between text-[10px] text-gray-500">
+                  <span>{formatDateTime(createdAt)}</span>
+                  {alert.metadata?.documento && (
+                    <span>Doc: {alert.metadata.documento}</span>
+                  )}
                 </div>
               </div>
             );
@@ -351,8 +343,8 @@ const AlertsPanel = ({ alerts = [], loading = false, onAlertUpdate }) => {
       )}
       
       {filteredAlerts.length > 0 && (
-        <div className="mt-4 text-sm text-gray-500 text-center">
-          Mostrando {filteredAlerts.length} de {alerts.length} alertas
+        <div className="mt-2 text-xs text-gray-400 text-center">
+          {filteredAlerts.length} de {alerts.length} alertas
         </div>
       )}
 

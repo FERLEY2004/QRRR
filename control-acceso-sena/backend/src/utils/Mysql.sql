@@ -28,9 +28,12 @@ CREATE TABLE usuarios (
   estado ENUM('ACTIVO', 'INACTIVO') DEFAULT 'ACTIVO',
   fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   ultimo_acceso TIMESTAMP NULL,
+  reset_token VARCHAR(64) NULL,
+  reset_token_expires DATETIME NULL,
   INDEX idx_email (email),
   INDEX idx_rol (rol),
-  INDEX idx_estado (estado)
+  INDEX idx_estado (estado),
+  INDEX idx_reset_token (reset_token)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Credenciales por defecto

@@ -86,7 +86,7 @@ export class SearchService {
         query += ` AND pf.nombre_programa LIKE ?`;
         params.push(`%${filters.programa}%`);
       }
-      
+
       if (filters.ficha) {
         query += ` AND f.codigo_ficha LIKE ?`;
         params.push(`%${filters.ficha}%`);

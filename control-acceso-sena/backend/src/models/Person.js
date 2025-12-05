@@ -52,8 +52,8 @@ export default class Person {
       if (error.code === 'ER_NO_SUCH_TABLE' || error.message?.includes('doesn\'t exist')) {
         console.warn('⚠️  Vista v_personas_dentro no existe, calculando manualmente...');
         try {
-      const [rows] = await pool.execute(
-        `SELECT 
+          const [rows] = await pool.execute(
+            `SELECT 
               p.id_persona,
               CONCAT(p.nombres, ' ', p.apellidos) as nombre_completo,
               p.documento,
@@ -148,7 +148,7 @@ export default class Person {
   }
 
   // Crear una nueva persona automáticamente
-    static async create(personData) {
+  static async create(personData) {
     try {
       const {
         nombre,
@@ -179,7 +179,7 @@ export default class Person {
         // Si existe pero está inactivo, reactivarlo y actualizar información
         if (existingPerson.estado !== 'activo') {
           // Obtener el ID del rol
-        const [roleRows] = await pool.execute(
+          const [roleRows] = await pool.execute(
             'SELECT id_rol FROM roles WHERE nombre_rol = ? LIMIT 1',
             [rol.toUpperCase()]
           );

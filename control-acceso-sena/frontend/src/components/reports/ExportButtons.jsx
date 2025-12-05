@@ -29,7 +29,7 @@ const ExportButtons = ({ reportType, filters = {}, data = null, onExportStart, o
 
     const filterEntries = Object.entries(filters || {}).filter(([key, value]) => value !== undefined && value !== null && value !== '');
     if (filterEntries.length > 0) {
-      doc.setFontSize(12);
+    doc.setFontSize(12);
       doc.setTextColor(primaryColor);
       doc.text('Filtros aplicados', margin, cursorY);
       cursorY += 16;
@@ -42,7 +42,7 @@ const ExportButtons = ({ reportType, filters = {}, data = null, onExportStart, o
       });
       cursorY += 6;
     }
-
+    
     if (!reportData || !reportData.data || reportData.data.length === 0) {
       doc.setFontSize(12);
       doc.setTextColor('#000');
@@ -90,7 +90,7 @@ const ExportButtons = ({ reportType, filters = {}, data = null, onExportStart, o
           }
         }
       });
-
+      
       if (reportData.pagination?.total && reportData.pagination.total > rows.length) {
         doc.setFontSize(10);
         doc.setTextColor(secondaryColor);
@@ -98,7 +98,7 @@ const ExportButtons = ({ reportType, filters = {}, data = null, onExportStart, o
         doc.text(`Mostrando ${rows.length} de ${reportData.pagination.total} registros`, margin, finalY + 16);
       }
     }
-
+    
     const timestamp = new Date().toISOString().split('T')[0];
     doc.save(`reporte_${reportType}_${timestamp}.pdf`);
   };

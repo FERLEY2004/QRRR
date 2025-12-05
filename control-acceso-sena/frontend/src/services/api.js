@@ -43,6 +43,20 @@ export const authAPI = {
   
   verifyToken: () => 
     api.get('/auth/verify').then(res => res.data),
+
+  // Recuperación de contraseña
+  forgotPassword: (email) =>
+    api.post('/auth/forgot-password', { email }).then(res => res.data),
+
+  resetPassword: (token, newPassword) =>
+    api.post('/auth/reset-password', { token, newPassword }).then(res => res.data),
+
+  // Solo para admin
+  getPendingResets: () =>
+    api.get('/auth/pending-resets').then(res => res.data),
+
+  adminResetPassword: (email, newPassword) =>
+    api.post('/auth/admin-reset-password', { email, newPassword }).then(res => res.data),
 };
 
 export const accessAPI = {

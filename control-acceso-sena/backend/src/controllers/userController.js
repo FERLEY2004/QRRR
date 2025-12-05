@@ -279,8 +279,8 @@ export const updateUser = async (req, res) => {
       const passwordHash = await bcrypt.hash(password, 10);
 
       if (passwordColumns.hasPasswordHash) {
-        updates.push('password_hash = ?');
-        params.push(passwordHash);
+      updates.push('password_hash = ?');
+      params.push(passwordHash);
       }
 
       if (passwordColumns.hasPasswords) {

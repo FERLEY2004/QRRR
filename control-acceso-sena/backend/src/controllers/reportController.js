@@ -231,7 +231,7 @@ export const getRoleReport = async (req, res) => {
     const { rol, desde, hasta } = req.query;
     const idColumn = await getRegistroIdField();
     
-      let query = `
+    let query = `
       SELECT 
         r.${idColumn} as id_acceso,
         r.tipo as tipo_acceso,

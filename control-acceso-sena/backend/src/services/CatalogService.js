@@ -953,7 +953,7 @@ export class CatalogService {
       const idColumn = await getRegistroIdField();
 
       let query = `
-        SELECT
+        SELECT 
           r.${idColumn} AS id_acceso,
           p.documento,
           p.tipo_documento,

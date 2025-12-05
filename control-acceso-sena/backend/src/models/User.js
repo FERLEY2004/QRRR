@@ -2,8 +2,14 @@
 // models/User.js
 import pool from '../utils/dbPool.js';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 
 export default class User {
+  // Generar token de recuperación de contraseña
+  static generateResetToken() {
+    return crypto.randomBytes(32).toString('hex');
+  }
+
   static async findByEmail(email) {
     try {
       const [rows] = await pool.execute(
@@ -82,6 +88,99 @@ export default class User {
     } catch (error) {
       console.error('Error en verifyPassword:', error);
       return false;
+    }
+  }
+
+  // Guardar token de recuperación de contraseña
+  static async saveResetToken(email, token, expiresAt) {
+    try {
+      const [result] = await pool.execute(
+        `UPDATE usuarios 
+         SET reset_token = ?, reset_token_expires = ? 
+         WHERE email = ?`,
+        [token, expiresAt, email]
+      );
+      return result.affectedRows > 0;
+    } catch (error) {
+      console.error('Error en saveResetToken:', error);
+      throw error;
+    }
+  }
+
+  // Buscar usuario por token de recuperación
+  static async findByResetToken(token) {
+    try {
+      const [rows] = await pool.execute(
+        `SELECT * FROM usuarios 
+         WHERE reset_token = ? AND reset_token_expires > NOW()`,
+        [token]
+      );
+      return rows.length > 0 ? rows[0] : null;
+    } catch (error) {
+      console.error('Error en findByResetToken:', error);
+      throw error;
+    }
+  }
+
+  // Actualizar contraseña
+  static async updatePassword(userId, newPassword) {
+    try {
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      const [result] = await pool.execute(
+        `UPDATE usuarios 
+         SET passwords = ?, reset_token = NULL, reset_token_expires = NULL 
+         WHERE id_usuario = ?`,
+        [hashedPassword, userId]
+      );
+      return result.affectedRows > 0;
+    } catch (error) {
+      console.error('Error en updatePassword:', error);
+      throw error;
+    }
+  }
+
+  // Actualizar contraseña por email (para admin)
+  static async updatePasswordByEmail(email, newPassword) {
+    try {
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      const [result] = await pool.execute(
+        `UPDATE usuarios 
+         SET passwords = ?, reset_token = NULL, reset_token_expires = NULL 
+         WHERE email = ?`,
+        [hashedPassword, email]
+      );
+      return result.affectedRows > 0;
+    } catch (error) {
+      console.error('Error en updatePasswordByEmail:', error);
+      throw error;
+    }
+  }
+
+  // Limpiar token de recuperación
+  static async clearResetToken(userId) {
+    try {
+      await pool.execute(
+        `UPDATE usuarios SET reset_token = NULL, reset_token_expires = NULL WHERE id_usuario = ?`,
+        [userId]
+      );
+    } catch (error) {
+      console.error('Error en clearResetToken:', error);
+    }
+  }
+
+  // Obtener solicitudes de recuperación pendientes (para admin)
+  static async getPendingResetRequests() {
+    try {
+      const [rows] = await pool.execute(
+        `SELECT id_usuario, nombre, email, reset_token_expires 
+         FROM usuarios 
+         WHERE reset_token IS NOT NULL AND reset_token_expires > NOW()
+         ORDER BY reset_token_expires DESC`
+      );
+      return rows;
+    } catch (error) {
+      console.error('Error en getPendingResetRequests:', error);
+      return [];
     }
   }
 }

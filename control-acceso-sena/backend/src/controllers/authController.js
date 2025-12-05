@@ -203,3 +203,211 @@ export const verify = async (req, res) => {
     });
   }
 };
+
+// Solicitar recuperación de contraseña
+export const requestPasswordReset = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: 'El email es requerido'
+      });
+    }
+
+    console.log(`🔑 Solicitud de recuperación de contraseña para: ${email}`);
+
+    // Verificar si el usuario existe
+    const user = await User.findByEmail(email);
+    
+    if (!user) {
+      // Por seguridad, no revelamos si el email existe o no
+      console.log(`⚠️ Usuario no encontrado: ${email}`);
+      return res.json({
+        success: true,
+        message: 'Si el email está registrado, se ha enviado la solicitud de recuperación'
+      });
+    }
+
+    // Generar token de recuperación
+    const resetToken = User.generateResetToken();
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hora
+
+    // Guardar token en la base de datos
+    await User.saveResetToken(email, resetToken, expiresAt);
+
+    console.log(`✅ Token de recuperación generado para: ${email}`);
+    console.log(`🔐 Token expira: ${expiresAt.toLocaleString('es-CO')}`);
+
+    // Registrar en logs
+    await LogService.logSeguridad(
+      'cambio_password',
+      user.id_usuario,
+      `Solicitud de recuperación de contraseña para ${email}`,
+      { email, accion: 'solicitud_recuperacion' },
+      req
+    );
+
+    // En un sistema con email, aquí se enviaría el correo
+    // Por ahora, el admin puede ver las solicitudes pendientes
+    res.json({
+      success: true,
+      message: 'Solicitud de recuperación registrada. Contacte al administrador para completar el proceso.',
+      // Solo mostrar el token en desarrollo
+      ...(process.env.NODE_ENV === 'development' && { 
+        dev_token: resetToken,
+        dev_expires: expiresAt 
+      })
+    });
+  } catch (error) {
+    console.error('❌ Error en requestPasswordReset:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al procesar la solicitud'
+    });
+  }
+};
+
+// Restablecer contraseña con token
+export const resetPassword = async (req, res) => {
+  try {
+    const { token, newPassword } = req.body;
+
+    if (!token || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: 'Token y nueva contraseña son requeridos'
+      });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: 'La contraseña debe tener al menos 6 caracteres'
+      });
+    }
+
+    // Buscar usuario por token
+    const user = await User.findByResetToken(token);
+    
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: 'Token inválido o expirado'
+      });
+    }
+
+    // Actualizar contraseña
+    const updated = await User.updatePassword(user.id_usuario, newPassword);
+    
+    if (!updated) {
+      return res.status(500).json({
+        success: false,
+        message: 'Error al actualizar la contraseña'
+      });
+    }
+
+    console.log(`✅ Contraseña restablecida para: ${user.email}`);
+
+    // Registrar en logs
+    await LogService.cambioPassword(user.id_usuario, user.email, 'usuario', req);
+
+    res.json({
+      success: true,
+      message: 'Contraseña actualizada exitosamente. Ya puede iniciar sesión.'
+    });
+  } catch (error) {
+    console.error('❌ Error en resetPassword:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al restablecer la contraseña'
+    });
+  }
+};
+
+// Ver solicitudes pendientes de recuperación (solo admin)
+export const getPendingResets = async (req, res) => {
+  try {
+    const requests = await User.getPendingResetRequests();
+    
+    res.json({
+      success: true,
+      data: requests.map(r => ({
+        id: r.id_usuario,
+        nombre: r.nombre,
+        email: r.email,
+        expira: r.reset_token_expires
+      }))
+    });
+  } catch (error) {
+    console.error('❌ Error en getPendingResets:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al obtener solicitudes pendientes'
+    });
+  }
+};
+
+// Restablecer contraseña por admin (sin token)
+export const adminResetPassword = async (req, res) => {
+  try {
+    const { email, newPassword } = req.body;
+
+    if (!email || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email y nueva contraseña son requeridos'
+      });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: 'La contraseña debe tener al menos 6 caracteres'
+      });
+    }
+
+    // Verificar que el usuario existe
+    const user = await User.findByEmail(email);
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'Usuario no encontrado'
+      });
+    }
+
+    // Actualizar contraseña
+    const updated = await User.updatePasswordByEmail(email, newPassword);
+    
+    if (!updated) {
+      return res.status(500).json({
+        success: false,
+        message: 'Error al actualizar la contraseña'
+      });
+    }
+
+    console.log(`✅ Contraseña restablecida por admin para: ${email}`);
+
+    // Registrar en logs
+    await LogService.logSeguridad(
+      'cambio_password',
+      user.id_usuario,
+      `Contraseña restablecida por administrador para ${email}`,
+      { email, admin_id: req.user.id, accion: 'reset_admin' },
+      req
+    );
+
+    res.json({
+      success: true,
+      message: `Contraseña actualizada exitosamente para ${user.nombre}`
+    });
+  } catch (error) {
+    console.error('❌ Error en adminResetPassword:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al restablecer la contraseña'
+    });
+  }
+};
