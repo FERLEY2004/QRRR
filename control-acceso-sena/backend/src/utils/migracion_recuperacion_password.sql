@@ -27,3 +27,4 @@ AND COLUMN_NAME IN ('reset_token', 'reset_token_expires');
 -- Mensaje de confirmación
 SELECT '✅ Migración completada: Columnas de recuperación de contraseña agregadas' AS resultado;
 
+
